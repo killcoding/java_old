@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Extracts string &apos;接收&apos; into R.string.res" description="Extracts string &apos;接收&apos; into R.string.res" file="/ceshi1/res/layout/activity_main.xml" flags="6" id="com.android.ide.eclipse.adt.refactoring.extract.string" mode="EDIT_SOURCE" proj="/ceshi1" rplc-all-java="false" rplc-all-xml="false" sel-end="1003" sel-start="1002" stamp="1428068451632" tok-esc="接收" xml-attr-name="android:text"/>
+</session>

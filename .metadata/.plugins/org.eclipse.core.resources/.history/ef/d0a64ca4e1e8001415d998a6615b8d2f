@@ -1,0 +1,54 @@
+/*通过jdbc-odbc操作数据库
+ * 操作STUDENTS表
+ * 1.先进性数据源的配置，再面板，系统 ，管理工具，odbc
+ * 2.再程序中连接数据源
+ * 
+ * */
+package com.dboperition;
+import java.sql.*;
+
+public class dbop {
+
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		Statement sm=null;
+		Connection ct= null;
+		
+		try {
+			//1.加载驱动:把需要的驱动程序加入内存
+			
+			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+			//2.得到连接 制定连接到哪个数据源（之前设置的）
+			
+			ct = DriverManager.getConnection("jdbc:microsoft:sqlsever://127.0.0.1:1433;databaseName=MyDB2012","sa","feiyang");//选择的是windows验证，所以不需要用户名和密码的验证
+			//3.创建statement或者preparedstatement
+			//主要用于发送sql语句
+			System.out.println("成功加入了");
+			sm = ct.createStatement();
+			//4执行语句
+			//添加.删除。修改可以使用此语句
+			int i = sm.executeUpdate("insert into STUDENTS(NAME,PHON) values('小屋','89089080')");
+			System.out.println("成功加入了"+i+"条数据");
+		} catch (Exception e) {
+			// TODO: handle exception
+		}finally{
+			//关闭一些资源
+			//谁后创建谁先关闭
+			try {
+				if(sm!=null){
+					sm.close();
+				}
+				if(ct!=null){
+					ct.close();
+				}
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
+}

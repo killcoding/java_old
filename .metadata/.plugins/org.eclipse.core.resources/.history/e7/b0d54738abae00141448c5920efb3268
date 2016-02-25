@@ -1,0 +1,199 @@
+package com.test1;
+
+import gnu.io.CommPortIdentifier;
+import gnu.io.PortInUseException;
+import gnu.io.SerialPort;
+import gnu.io.SerialPortEvent;
+import gnu.io.SerialPortEventListener;
+import gnu.io.UnsupportedCommOperationException;
+
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+import java.util.*;
+
+import javax.swing.*;
+
+public class Test_1_0 {
+
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		MyWindow mw = new MyWindow();
+		
+		
+	}
+
+}
+
+
+class MyWindow extends JFrame implements ActionListener,SerialPortEventListener
+{
+	//定义变量
+	JButton send,open,close;  //两个按钮 控制发送数据和关闭界面
+	JPanel jp1;
+	TextArea in_message = new TextArea();
+    TextArea out_message = new TextArea();
+    /*********************端口的变量******************************/
+	String potrName;
+	static CommPortIdentifier portId;
+	InputStream inputstream;
+	OutputStream outputstream;
+    SerialPort serialPort = null;
+	static StringBuffer buffer;//串口读入数据
+	Boolean recieve;//有新数据读入标志
+	static Enumeration<CommPortIdentifier> portList;
+	byte data[] = new byte[10240];
+	 String str = "";
+	
+	//构造函数
+	public MyWindow()
+	{
+		//实例化对象
+		jp1 = new JPanel();
+		open = new JButton("打开");
+		send = new JButton("发送");
+		close = new JButton("关闭");
+
+		//添加进panel
+		jp1.add(open);
+		jp1.add(send);
+		jp1.add(close);
+		
+		//将panel添加到frame
+		this.add(jp1,BorderLayout.SOUTH);
+		this.add(in_message,BorderLayout.CENTER);
+		this.add(out_message,BorderLayout.NORTH);
+		
+		//注册监听
+		send.addActionListener(this);
+		open.addActionListener(this);
+		close.addActionListener(this);
+		
+		//设置监听命令
+		send.setActionCommand("send");
+		open.setActionCommand("open");
+		close.setActionCommand("close");
+
+		//in_message.setEditable(false);
+		//设置窗体
+		this.setTitle("四旋翼飞行器");
+		this.setSize(800,500);
+		this.setLocation(200, 200);
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+				
+		//显示窗体
+		this.setVisible(true);
+	}
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		// TODO Auto-generated method stub
+		if(e.getActionCommand().equals("open"))
+		{
+			portList = CommPortIdentifier.getPortIdentifiers(); //得到当前连接上的端口
+			while (portList.hasMoreElements()) 
+			{  
+				portId = (CommPortIdentifier) portList.nextElement();
+				if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL)
+				{//判断如果端口类型是串口
+					System.out.println(portId.getName());
+					if (portId.getName().equals("COM17")) {
+					//打开串口
+                    try {
+                    		serialPort = (SerialPort)portId.open("OOPSD", 2000);
+						} catch (PortInUseException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+                    try {
+                        //获得输入流
+                        inputstream = serialPort.getInputStream();
+                    } catch (IOException e1) {}
+                  //设置串口监听
+                    try {
+                        serialPort.addEventListener((SerialPortEventListener) this);
+                    } catch (TooManyListenersException e1) {}
+                    
+                    serialPort.notifyOnDataAvailable(true);
+                    
+                    /* 设置串口通讯参数 */
+                    try {
+                        serialPort.setSerialPortParams(9600, SerialPort.DATABITS_8,
+                                SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+                    } catch (UnsupportedCommOperationException e1) {}
+                   
+					}
+				}
+				in_message.setText("串口已经打开");	
+		    }
+			
+		}
+		if(e.getActionCommand().equals("send"))
+		{
+			System.out.println("ghfh");
+			data = out_message.getText().getBytes();
+            
+			 try {
+					outputstream = serialPort.getOutputStream();
+					outputstream.write(data);
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			 
+		}
+		if(e.getActionCommand().equals("close"))
+		{
+			serialPort.close(); // 关闭串口
+			System.out.println("端口已关闭");
+			in_message.setText("串口COM1已经关闭,停止发送数据.");
+		}
+	}
+	@Override
+	public void serialEvent(SerialPortEvent arg0) {
+		// TODO Auto-generated method stub
+		 switch(arg0.getEventType()) {
+	        case SerialPortEvent.BI:/*Break interrupt,通讯中断*/
+	        case SerialPortEvent.OE:/*Overrun error，溢位错误*/
+	        case SerialPortEvent.FE:/*Framing error，传帧错误*/
+	        case SerialPortEvent.PE:/*Parity error，校验错误*/
+	        case SerialPortEvent.CD:/*Carrier detect，载波检测*/
+	        case SerialPortEvent.CTS:/*Clear to send，清除发送*/
+	        case SerialPortEvent.DSR:/*Data set ready，数据设备就绪*/
+	        case SerialPortEvent.RI:/*Ring indicator，响铃指示*/
+	        case SerialPortEvent.OUTPUT_BUFFER_EMPTY:/*Output buffer is empty，输出缓冲区清空*/
+	            break;
+	        case SerialPortEvent.DATA_AVAILABLE:/*Data available at the serial port，端口有可用数据。读到缓冲数组，输出到终端*/
+	            byte[] readBuffer = new byte[256];
+	            char[] readChar = new char[20];
+	            String readStr="";
+	            int numBytes=0;
+	            try {
+	                while (inputstream.available() > 0) {
+	                     numBytes= inputstream.read(readBuffer);
+	                }
+//	               for(int iii=0;iii<numBytes;iii++){   
+//	                 readStr=readStr + Byte.toString(readBuffer[iii]);                  
+//	               }
+	             readStr = new String(readBuffer);
+//	             if(readBuffer[0]=='0')
+	             System.out.println(readBuffer[0]);
+	             System.out.println(readStr);
+	             in_message.append(readStr + " ");
+	            
+	            } catch (IOException e) {}
+			try {
+				inputstream.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	            break;            
+	        }
+	    }
+	
+}
+
